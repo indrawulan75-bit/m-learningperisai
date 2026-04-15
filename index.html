@@ -1,0 +1,969 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>M-LEARNING PERISAI</title>
+  <!-- Mengimpor Tailwind CSS untuk styling -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Mengimpor React dan ReactDOM -->
+  <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <!-- Mengimpor Babel untuk kompilasi JSX di browser -->
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+</head>
+<body class="bg-[#0f172a]">
+  <div id="root"></div>
+
+  <script type="text/babel">
+    const { useState, useEffect, useRef } = React;
+
+    // --- KOMPONEN IKON (Menggantikan lucide-react agar berjalan mandiri di HTML) ---
+    const IconBase = ({ children, size = 24, className = '', color = 'currentColor' }) => (
+      <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+        {children}
+      </svg>
+    );
+    const Play = (props) => <IconBase {...props}><polygon points="5 3 19 12 5 21 5 3"></polygon></IconBase>;
+    const ArrowRight = (props) => <IconBase {...props}><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></IconBase>;
+    const ArrowLeft = (props) => <IconBase {...props}><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></IconBase>;
+    const BookOpen = (props) => <IconBase {...props}><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path></IconBase>;
+    const LayoutGrid = (props) => <IconBase {...props}><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></IconBase>;
+    const ListOrdered = (props) => <IconBase {...props}><line x1="10" y1="6" x2="21" y2="6"></line><line x1="10" y1="12" x2="21" y2="12"></line><line x1="10" y1="18" x2="21" y2="18"></line><path d="M4 6h1v4"></path><path d="M4 10h2"></path><path d="M6 18H4c0-1 2-2 2-3s-1-1.5-2-1"></path></IconBase>;
+    const Target = (props) => <IconBase {...props}><circle cx="12" cy="12" r="10"></circle><circle cx="12" cy="12" r="6"></circle><circle cx="12" cy="12" r="2"></circle></IconBase>;
+    const HelpCircle = (props) => <IconBase {...props}><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></IconBase>;
+    const User = (props) => <IconBase {...props}><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></IconBase>;
+    const Home = (props) => <IconBase {...props}><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></IconBase>;
+    const CheckCircle = (props) => <IconBase {...props}><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></IconBase>;
+    const XCircle = (props) => <IconBase {...props}><circle cx="12" cy="12" r="10"></circle><line x1="15" y1="9" x2="9" y2="15"></line><line x1="9" y1="9" x2="15" y2="15"></line></IconBase>;
+    const RotateCcw = (props) => <IconBase {...props}><polyline points="1 4 1 10 7 10"></polyline><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path></IconBase>;
+    // Ikon Volume untuk Musik
+    const Volume2 = (props) => <IconBase {...props}><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path></IconBase>;
+    const VolumeX = (props) => <IconBase {...props}><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><line x1="23" y1="9" x2="17" y2="15"></line><line x1="17" y1="9" x2="23" y2="15"></line></IconBase>;
+    // Ikon Fullscreen
+    const Maximize = (props) => <IconBase {...props}><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"></path></IconBase>;
+    const Minimize = (props) => <IconBase {...props}><path d="M8 3v3a2 2 0 0 1-2 2H3m18 0h-3a2 2 0 0 1-2-2V3m0 18v-3a2 2 0 0 1 2-2h3M3 16h3a2 2 0 0 1 2 2v3"></path></IconBase>;
+    const Bookmark = (props) => <IconBase {...props}><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path></IconBase>;
+
+    // --- KOMPONEN BUTTON (Dikeluarkan agar stabil) ---
+    const Button = ({ onClick, children, icon: Icon, variant = 'primary', className = '' }) => {
+      const baseStyle = "flex items-center justify-center gap-2 px-6 py-3 rounded-full font-bold transition-all duration-300 transform hover:scale-105 active:scale-95 shadow-lg";
+      const variants = {
+        primary: "bg-gradient-to-r from-blue-500 to-indigo-600 text-white hover:shadow-blue-500/50",
+        secondary: "bg-white/10 backdrop-blur-md border border-white/20 text-white hover:bg-white/20",
+        accent: "bg-gradient-to-r from-pink-500 to-purple-600 text-white hover:shadow-pink-500/50",
+        success: "bg-green-500 text-white hover:bg-green-600",
+        outline: "border-2 border-indigo-400 text-indigo-100 hover:bg-indigo-400/20"
+      };
+
+      return (
+        <button onClick={onClick} className={`${baseStyle} ${variants[variant]} ${className}`}>
+          {Icon && <Icon size={20} />}
+          {children}
+        </button>
+      );
+    };
+
+    // --- KOMPONEN HALAMAN LOGIN (Dikeluarkan agar tidak re-render ulang setiap ketikan) ---
+    const HalamanLogin = ({ namaPeserta, setNamaPeserta, asalSekolah, setAsalSekolah, navigate }) => {
+      const handleLogin = (e) => {
+        e?.preventDefault();
+        if(namaPeserta.trim() && asalSekolah.trim()) {
+          navigate('pengantar'); // Mengarahkan ke halaman pengantar setelah login
+        }
+      };
+
+      return (
+        <React.Fragment>
+          <div
+            className="fixed inset-0 z-[-1] bg-cover bg-center bg-no-repeat"
+            style={{ backgroundImage: 'url("https://i.imgur.com/IdXVYlk.png")' }}
+          >
+            <div className="absolute inset-0 bg-[#0f172a]/20"></div>
+          </div>
+          <div className="flex flex-col items-center justify-center h-full max-w-md mx-auto px-4 relative z-10">
+            <div className="bg-white/10 backdrop-blur-lg border border-white/20 p-8 rounded-3xl shadow-2xl w-full text-center">
+              <div className="bg-blue-500/20 w-24 h-24 mx-auto rounded-full flex items-center justify-center mb-6">
+                <User size={48} className="text-blue-400" />
+              </div>
+              <h2 className="text-3xl font-bold text-white mb-2">Login Peserta</h2>
+              <p className="text-indigo-100 mb-8">Silakan masukkan nama dan asal sekolah Anda sebelum masuk ke menu utama.</p>
+             
+              <form onSubmit={handleLogin} className="flex flex-col gap-4">
+                <input
+                  type="text"
+                  placeholder="Masukkan Nama Anda..."
+                  value={namaPeserta}
+                  onChange={(e) => setNamaPeserta(e.target.value)}
+                  className="w-full bg-black/30 border border-white/10 rounded-xl px-4 py-4 text-white placeholder-white/50 focus:outline-none focus:border-blue-500 transition-colors text-center text-lg font-medium"
+                  required
+                />
+                <input
+                  type="text"
+                  placeholder="Masukkan Asal Sekolah..."
+                  value={asalSekolah}
+                  onChange={(e) => setAsalSekolah(e.target.value)}
+                  className="w-full bg-black/30 border border-white/10 rounded-xl px-4 py-4 text-white placeholder-white/50 focus:outline-none focus:border-blue-500 transition-colors text-center text-lg font-medium"
+                  required
+                />
+                <button
+                  type="submit"
+                  className="flex items-center justify-center gap-2 px-6 py-4 rounded-full font-bold transition-all duration-300 transform hover:scale-105 active:scale-95 shadow-lg bg-gradient-to-r from-blue-500 to-indigo-600 text-white hover:shadow-blue-500/50 w-full mt-2"
+                >
+                  Simpan dan Lanjut <ArrowRight size={20} />
+                </button>
+              </form>
+            </div>
+            <div className="mt-8">
+              <Button onClick={() => navigate('petunjuk')} icon={ArrowLeft} variant="secondary">
+                Kembali ke Petunjuk
+              </Button>
+            </div>
+          </div>
+        </React.Fragment>
+      );
+    };
+
+    // --- KOMPONEN APLIKASI UTAMA ---
+    function App() {
+      const [currentPage, setCurrentPage] = useState('judul');
+      const [fade, setFade] = useState('opacity-100');
+     
+      // State Global untuk Data Peserta
+      const [namaPeserta, setNamaPeserta] = useState('');
+      const [asalSekolah, setAsalSekolah] = useState('');
+     
+      // State dan Ref untuk Musik
+      const [isMusicPlaying, setIsMusicPlaying] = useState(false);
+      const audioRef = useRef(null);
+
+      // State untuk Fullscreen
+      const [isFullscreen, setIsFullscreen] = useState(false);
+
+      // Sinkronisasi state ketika pengguna menekan 'Esc' untuk keluar fullscreen
+      useEffect(() => {
+        const handleFullscreenChange = () => {
+          setIsFullscreen(!!document.fullscreenElement);
+        };
+        document.addEventListener('fullscreenchange', handleFullscreenChange);
+        return () => document.removeEventListener('fullscreenchange', handleFullscreenChange);
+      }, []);
+
+      const navigate = (page) => {
+        setFade('opacity-0');
+        setTimeout(() => {
+          setCurrentPage(page);
+          setFade('opacity-100');
+        }, 300);
+      };
+
+      const toggleMusic = () => {
+        if (isMusicPlaying) {
+          audioRef.current.pause();
+        } else {
+          audioRef.current.play();
+        }
+        setIsMusicPlaying(!isMusicPlaying);
+      };
+
+      const toggleFullscreen = () => {
+        if (!document.fullscreenElement) {
+          document.documentElement.requestFullscreen().catch(err => {
+            console.log(`Gagal mengaktifkan fullscreen: ${err.message}`);
+          });
+        } else {
+          if (document.exitFullscreen) {
+            document.exitFullscreen();
+          }
+        }
+      };
+
+      // --- HALAMAN 1: JUDUL ---
+      const HalamanJudul = () => (
+        <React.Fragment>
+          <div
+            className="fixed inset-0 z-[-1] bg-cover bg-center bg-no-repeat"
+            style={{ backgroundImage: 'url("https://i.imgur.com/etfdKcB.png")' }}
+          >
+            <div className="absolute inset-0 bg-[#0f172a]/20"></div>
+          </div>
+          <div className="absolute bottom-8 right-8 md:bottom-16 md:right-16 z-10">
+            <Button onClick={() => navigate('penjelasan')} icon={Play} variant="primary" className="text-xl px-10 py-5 shadow-blue-500/50 shadow-xl">
+              Mulai
+            </Button>
+          </div>
+        </React.Fragment>
+      );
+
+      // --- HALAMAN 2: PENJELASAN JUDUL ---
+      const HalamanPenjelasan = () => (
+        <React.Fragment>
+          <div
+            className="fixed inset-0 z-[-1] bg-cover bg-center bg-no-repeat"
+            style={{ backgroundImage: 'url("https://i.imgur.com/gnmofNg.png")' }}
+          >
+            <div className="absolute inset-0 bg-[#0f172a]/20"></div>
+          </div>
+          <div className="flex flex-col items-center justify-center h-full w-full px-4 md:px-12 relative z-10">
+            <div className="flex w-full justify-between pt-4">
+              <Button onClick={() => navigate('judul')} icon={ArrowLeft} variant="secondary">
+                Kembali
+              </Button>
+              <Button onClick={() => navigate('detektif')} icon={ArrowRight} variant="primary" className="flex-row-reverse">
+                Lanjut
+              </Button>
+            </div>
+          </div>
+        </React.Fragment>
+      );
+
+      // --- HALAMAN DETEKTIF RUPIAH ---
+      const HalamanDetektif = () => (
+        <React.Fragment>
+          <div
+            className="fixed inset-0 z-[-1] bg-cover bg-center bg-no-repeat"
+            style={{ backgroundImage: 'url("https://i.imgur.com/1KGhjbS.png")' }}
+          >
+            <div className="absolute inset-0 bg-[#0f172a]/20"></div>
+          </div>
+          <div className="flex flex-col items-center justify-between h-full max-w-3xl mx-auto px-4 py-10 relative z-10">
+            <div className="flex-grow flex items-center justify-center"></div>
+            <div className="flex w-full justify-between pt-4">
+              <Button onClick={() => navigate('penjelasan')} icon={ArrowLeft} variant="secondary">
+                Kembali
+              </Button>
+              <Button onClick={() => navigate('petunjuk')} icon={Play} variant="primary" className="flex-row-reverse">
+                Mulai
+              </Button>
+            </div>
+          </div>
+        </React.Fragment>
+      );
+
+      // --- HALAMAN 3: PETUNJUK PENGERJAAN ---
+      const HalamanPetunjuk = () => (
+        <React.Fragment>
+          {/* Background Image Khusus Halaman Petunjuk */}
+          <div
+            className="fixed inset-0 z-[-1] bg-cover bg-center bg-no-repeat"
+            style={{ backgroundImage: 'url("https://i.imgur.com/O68ES0x.png")' }}
+          >
+            {/* Overlay tipis */}
+            <div className="absolute inset-0 bg-[#0f172a]/20"></div>
+          </div>
+
+          <div className="flex flex-col items-center justify-between h-full max-w-3xl mx-auto px-4 py-10 relative z-10">
+            {/* Area kosong untuk menghilangkan konten sebelumnya */}
+            <div className="flex-grow flex items-center justify-center"></div>
+           
+            <div className="flex w-full justify-between pt-4">
+              <Button onClick={() => navigate('detektif')} icon={ArrowLeft} variant="secondary">
+                Kembali
+              </Button>
+              <Button onClick={() => navigate('login')} icon={ArrowRight} variant="accent" className="flex-row-reverse">
+                Lanjut
+              </Button>
+            </div>
+          </div>
+        </React.Fragment>
+      );
+
+      // --- HALAMAN PENGANTAR (SETELAH LOGIN) ---
+      const HalamanPengantar = () => (
+        <React.Fragment>
+          <div
+            className="fixed inset-0 z-[-1] bg-cover bg-center bg-no-repeat"
+            style={{ backgroundImage: 'url("https://i.imgur.com/keANzDo.png")' }}
+          >
+            <div className="absolute inset-0 bg-[#0f172a]/20"></div>
+          </div>
+         
+          {/* Wrapper Konten Utama */}
+          <div className="flex flex-col items-center justify-between h-full max-w-3xl mx-auto px-4 py-10 relative z-10">
+           
+            {/* Tombol Nama yang Otomatis Terisi */}
+            <div className="absolute top-[35%] left-1/2 transform -translate-x-1/2 w-full flex justify-center px-4">
+              <div className="inline-flex items-center justify-center gap-3 bg-gradient-to-r from-blue-600/90 to-purple-600/90 backdrop-blur-md border-2 border-white/40 px-8 py-3 rounded-full shadow-[0_0_20px_rgba(59,130,246,0.5)] transform hover:scale-105 transition-all duration-300 animate-pulse">
+                <User size={24} className="text-white" />
+                <span className="text-xl md:text-2xl font-extrabold text-white tracking-widest uppercase drop-shadow-md">
+                  HALO, {namaPeserta || 'PESERTA'}!
+                </span>
+              </div>
+            </div>
+
+            <div className="flex-grow flex items-center justify-center"></div>
+            <div className="flex w-full justify-between pt-4">
+              <Button onClick={() => navigate('login')} icon={ArrowLeft} variant="secondary">
+                Kembali
+              </Button>
+              <Button onClick={() => navigate('menu')} icon={ArrowRight} variant="primary" className="flex-row-reverse">
+                Lanjut ke Menu
+              </Button>
+            </div>
+          </div>
+        </React.Fragment>
+      );
+
+      // --- HALAMAN 4: MENU UTAMA ---
+      const HalamanMenu = () => {
+        // Menu Kuis dan Asesmen telah dipisahkan
+        const menus = [
+          { id: 'tujuan', title: 'Tujuan Pembelajaran', icon: Target, color: 'from-orange-400 to-red-500' },
+          { id: 'materi', title: 'Materi Pembelajaran', icon: BookOpen, color: 'from-blue-400 to-indigo-600' },
+          { id: 'kuis', title: 'Kuis', icon: HelpCircle, color: 'from-purple-400 to-pink-600' },
+          { id: 'petunjuk-asesmen', title: 'Asesmen', icon: ListOrdered, color: 'from-rose-400 to-red-600' },
+          { id: 'referensi', title: 'Referensi', icon: Bookmark, color: 'from-violet-500 to-purple-600' },
+          { id: 'profil', title: 'Profil Pengembang', icon: User, color: 'from-teal-400 to-emerald-600' }
+        ];
+
+        return (
+          <React.Fragment>
+            <div
+              className="fixed inset-0 z-[-1] bg-cover bg-center bg-no-repeat"
+              style={{ backgroundImage: 'url("https://i.imgur.com/fgsyGw4.png")' }}
+            >
+              <div className="absolute inset-0 bg-[#0f172a]/20"></div>
+            </div>
+            <div className="flex flex-col items-start justify-center h-full max-w-6xl mx-auto px-6 md:px-12 lg:px-20 w-full relative z-10">
+              <h2 className="text-4xl font-bold text-white mb-8 drop-shadow-md text-left">Menu Utama</h2>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 w-full max-w-2xl">
+                {menus.map((menu) => (
+                  <button
+                    key={menu.id}
+                    onClick={() => navigate(menu.id)}
+                    className={`relative overflow-hidden rounded-3xl p-6 shadow-xl transition-all duration-300 transform hover:-translate-y-2 hover:shadow-2xl group text-left h-36 flex flex-col justify-end bg-gradient-to-br ${menu.color}`}
+                  >
+                    <div className="absolute top-4 right-4 opacity-50 group-hover:opacity-100 transition-opacity duration-300 transform group-hover:scale-110">
+                      <menu.icon size={48} color="white" />
+                    </div>
+                    <h3 className="text-xl font-bold text-white relative z-10">{menu.title}</h3>
+                  </button>
+                ))}
+              </div>
+              <div className="mt-8 w-full max-w-2xl flex justify-start">
+                <Button onClick={() => navigate('pengantar')} icon={ArrowLeft} variant="secondary">
+                  Kembali
+                </Button>
+              </div>
+            </div>
+          </React.Fragment>
+        );
+      };
+
+      // --- SUB-HALAMAN: TUJUAN PEMBELAJARAN ---
+      const HalamanTujuan = () => (
+        <React.Fragment>
+          <div
+            className="fixed inset-0 z-[-1] bg-cover bg-center bg-no-repeat"
+            style={{ backgroundImage: 'url("https://i.imgur.com/JwZXDzM.png")' }}
+          >
+            <div className="absolute inset-0 bg-[#0f172a]/20"></div>
+          </div>
+          <div className="flex flex-col w-full max-w-xl mx-auto h-full p-4 justify-center relative z-10">
+            <div className="bg-[#0f172a]/70 backdrop-blur-md border border-white/10 p-8 md:p-10 rounded-3xl shadow-[0_0_30px_rgba(0,0,0,0.5)] w-full">
+              <div className="flex items-center gap-4 mb-8 border-b border-white/20 pb-4">
+                <Target size={40} className="text-orange-400 drop-shadow-md" />
+                <h2 className="text-3xl md:text-4xl font-bold text-white drop-shadow-lg">Tujuan Pembelajaran</h2>
+              </div>
+              <div className="space-y-6 text-lg text-white">
+                <p className="font-medium drop-shadow text-base md:text-xl">Setelah menggunakan media pembelajaran interaktif ini, pengguna diharapkan mampu:</p>
+                <ul className="list-decimal list-inside space-y-4 bg-black/40 border border-white/5 p-6 md:p-8 rounded-xl shadow-inner text-base md:text-lg">
+                  <li className="leading-relaxed drop-shadow-sm">Mendeskripsikan kondisi ekonomi Indonesia pada awal kemerdekaan</li>
+                  <li className="leading-relaxed drop-shadow-sm">Mendeskripsikan kebijakan ekonomi Indonesia pada awal kemerdekaan, Oeang Repoeblik Indonesia (ORI): Sejarah Lahirnya Identitas Rupiah</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </React.Fragment>
+      );
+
+      // --- SUB-HALAMAN: RINCIAN MATERI (MENU MATERI) ---
+      const HalamanSubMenuMateri = () => {
+        const subMenus = [
+          { id: 'isi-materi-1', title: 'Mendeskripsikan kondisi ekonomi Indonesia pada awal kemerdekaan', icon: BookOpen, color: 'from-blue-500 to-cyan-600' },
+          { id: 'isi-materi-2', title: 'Mendeskripsikan kebijakan ekonomi Indonesia pada awal kemerdekaan, Oeang Repoeblik Indonesia (ORI): Sejarah Lahirnya Identitas Rupiah', icon: LayoutGrid, color: 'from-emerald-500 to-teal-600' }
+        ];
+
+        return (
+          <React.Fragment>
+            <div
+              className="fixed inset-0 z-[-1] bg-cover bg-center bg-no-repeat"
+              style={{ backgroundImage: 'url("https://i.imgur.com/MblF3u1.png")' }}
+            >
+              <div className="absolute inset-0 bg-[#0f172a]/20"></div>
+            </div>
+            <div className="flex flex-col items-end justify-center h-full max-w-6xl mx-auto px-6 md:px-12 lg:px-20 w-full relative z-10">
+              <div className="w-full max-w-xl xl:max-w-2xl flex flex-col">
+                <div className="flex items-center gap-4 mb-10 border-b border-white/20 pb-4 w-full justify-start">
+                  <BookOpen size={40} className="text-blue-400" />
+                  <h2 className="text-4xl font-bold text-white drop-shadow-md text-left">Rincian Materi</h2>
+                </div>
+               
+                <div className="grid grid-cols-1 gap-5 w-full">
+                  {subMenus.map((menu) => (
+                    <button
+                      key={menu.id}
+                      onClick={() => navigate(menu.id)} // Mengarah langsung ke ID materi masing-masing
+                      className={`relative overflow-hidden rounded-2xl p-6 shadow-lg transition-all duration-300 transform hover:-translate-y-1 hover:shadow-xl group text-left flex items-center gap-6 bg-gradient-to-r ${menu.color}`}
+                    >
+                      <div className="bg-white/20 p-4 rounded-full group-hover:scale-110 transition-transform duration-300">
+                        <menu.icon size={32} color="white" />
+                      </div>
+                      <div className="flex-grow">
+                        <h3 className="text-lg md:text-xl font-bold text-white relative z-10 leading-snug">{menu.title}</h3>
+                      </div>
+                      <div className="opacity-70 group-hover:opacity-100 transition-opacity duration-300">
+                        <ArrowRight size={28} color="white" />
+                      </div>
+                    </button>
+                  ))}
+                </div>
+                <div className="mt-12 w-full flex justify-start">
+                  <Button onClick={() => navigate('menu')} icon={ArrowLeft} variant="secondary">
+                    Kembali ke Menu
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </React.Fragment>
+        );
+      };
+
+      // --- SUB-HALAMAN: MATERI DRIVE (GOOGLE DRIVE EMBED) ---
+      const HalamanMateriDrive1 = () => {
+        return (
+          <React.Fragment>
+            {/* Menggunakan overlay dengan efek blur estetis alih-alih warna solid */}
+            <div className="fixed inset-0 z-[100] flex flex-col bg-[#0f172a]/60 backdrop-blur-xl">
+              
+              {/* Header Khusus dibuat transparan (glassmorphism) */}
+              <div className="flex justify-between items-center bg-white/10 border-b border-white/10 p-3 md:p-4 shadow-lg z-10 backdrop-blur-md">
+                <div className="flex items-center gap-3">
+                  <BookOpen size={24} className="text-blue-400 drop-shadow-md" />
+                  <h2 className="text-sm md:text-lg font-bold text-white drop-shadow-lg truncate">Kondisi Ekonomi Awal Kemerdekaan</h2>
+                </div>
+                <button 
+                  onClick={() => navigate('materi')} 
+                  className="flex items-center gap-2 bg-red-500/80 hover:bg-red-500 border border-red-400/50 text-white px-4 py-2 rounded-full font-bold transition-all transform hover:scale-105 text-sm backdrop-blur-sm shadow-[0_0_15px_rgba(239,68,68,0.4)]"
+                >
+                  <ArrowLeft size={16} /> Tutup
+                </button>
+              </div>
+              
+              {/* Area Iframe yang menggunakan sisa ruang dengan bingkai estetis */}
+              <div className="flex-grow w-full p-0 md:p-6 md:pb-0">
+                <div className="w-full h-full rounded-none md:rounded-t-3xl overflow-hidden shadow-[0_0_40px_rgba(0,0,0,0.6)] border-0 md:border md:border-white/20 md:border-b-0 bg-transparent">
+                  <iframe
+                    src="https://drive.google.com/file/d/114uCKEkmGrBRY7afhlEIv3b6dhgnPlvm/preview"
+                    className="w-full h-full border-0"
+                    title="Materi Kondisi Ekonomi"
+                    allowFullScreen
+                  ></iframe>
+                </div>
+              </div>
+
+            </div>
+          </React.Fragment>
+        );
+      };
+
+      // --- SUB-HALAMAN: MATERI DRIVE 2 (GOOGLE DRIVE EMBED) ---
+      const HalamanMateriDrive2 = () => {
+        return (
+          <React.Fragment>
+            {/* Menggunakan overlay dengan efek blur estetis alih-alih warna solid */}
+            <div className="fixed inset-0 z-[100] flex flex-col bg-[#0f172a]/60 backdrop-blur-xl">
+              
+              {/* Header Khusus dibuat transparan (glassmorphism) */}
+              <div className="flex justify-between items-center bg-white/10 border-b border-white/10 p-3 md:p-4 shadow-lg z-10 backdrop-blur-md">
+                <div className="flex items-center gap-3">
+                  <BookOpen size={24} className="text-blue-400 drop-shadow-md" />
+                  <h2 className="text-sm md:text-lg font-bold text-white drop-shadow-lg truncate">Kebijakan Ekonomi & Sejarah ORI-RUPIAH</h2>
+                </div>
+                <button 
+                  onClick={() => navigate('materi')} 
+                  className="flex items-center gap-2 bg-red-500/80 hover:bg-red-500 border border-red-400/50 text-white px-4 py-2 rounded-full font-bold transition-all transform hover:scale-105 text-sm backdrop-blur-sm shadow-[0_0_15px_rgba(239,68,68,0.4)]"
+                >
+                  <ArrowLeft size={16} /> Tutup
+                </button>
+              </div>
+              
+              {/* Area Iframe yang menggunakan sisa ruang dengan bingkai estetis */}
+              <div className="flex-grow w-full p-0 md:p-6 md:pb-0">
+                <div className="w-full h-full rounded-none md:rounded-t-3xl overflow-hidden shadow-[0_0_40px_rgba(0,0,0,0.6)] border-0 md:border md:border-white/20 md:border-b-0 bg-transparent">
+                  <iframe
+                    src="https://drive.google.com/file/d/1yIqoGYJoZU509AqkN8w3nPpOS2UWgklr/preview"
+                    className="w-full h-full border-0"
+                    title="Materi Kebijakan Ekonomi dan ORI"
+                    allowFullScreen
+                  ></iframe>
+                </div>
+              </div>
+
+            </div>
+          </React.Fragment>
+        );
+      };
+
+      // --- SUB-HALAMAN: RINCIAN KUIS (MENU KUIS) ---
+      const HalamanSubMenuKuis = () => {
+        const subMenus = [
+          { id: 'kuis-ekonomi', title: 'Sang Menteri: Misi Penyelamatan Kas Negara', icon: ListOrdered, color: 'from-purple-500 to-pink-600' },
+          { id: 'kuis-game', title: 'Detektif Rupiah: Cinta, Bangga dan Paham Rupiah', icon: Target, color: 'from-blue-500 to-cyan-600' }
+        ];
+
+        return (
+          <React.Fragment>
+            <div
+              className="fixed inset-0 z-[-1] bg-cover bg-center bg-no-repeat"
+              style={{ backgroundImage: 'url("https://i.imgur.com/lO44ELu.png")' }}
+            >
+              <div className="absolute inset-0 bg-[#0f172a]/20"></div>
+            </div>
+            <div className="flex flex-col items-start justify-center h-full max-w-6xl mx-auto px-6 md:px-12 lg:px-20 w-full relative z-10">
+              <div className="flex items-center gap-4 mb-10 border-b border-white/20 pb-4 w-full max-w-2xl justify-start">
+                <HelpCircle size={40} className="text-pink-400" />
+                <h2 className="text-4xl font-bold text-white drop-shadow-md text-left">Pilih Kuis</h2>
+              </div>
+             
+              <div className="grid grid-cols-1 gap-5 w-full max-w-2xl">
+                {subMenus.map((menu) => (
+                  <button
+                    key={menu.id}
+                    onClick={() => navigate(menu.id)} // Mengarah ke kuis yang dipilih
+                    className={`relative overflow-hidden rounded-2xl p-6 shadow-lg transition-all duration-300 transform hover:-translate-y-1 hover:shadow-xl group text-left flex items-center gap-6 bg-gradient-to-r ${menu.color}`}
+                  >
+                    <div className="bg-white/20 p-4 rounded-full group-hover:scale-110 transition-transform duration-300">
+                      <menu.icon size={32} color="white" />
+                    </div>
+                    <div className="flex-grow">
+                      <h3 className="text-xl md:text-2xl font-bold text-white relative z-10 leading-snug">{menu.title}</h3>
+                    </div>
+                    <div className="opacity-70 group-hover:opacity-100 transition-opacity duration-300">
+                      <ArrowRight size={28} color="white" />
+                    </div>
+                  </button>
+                ))}
+              </div>
+              <div className="mt-12 w-full max-w-2xl flex justify-start">
+                <Button onClick={() => navigate('menu')} icon={ArrowLeft} variant="secondary">
+                  Kembali ke Menu
+                </Button>
+              </div>
+            </div>
+          </React.Fragment>
+        );
+      };
+
+      // --- KONFIGURASI WARNA OPSI KUIS/ASESMEN ---
+      const optionColors = [
+        "bg-gradient-to-r from-blue-500/20 to-cyan-500/20 border-cyan-400/50 hover:border-cyan-400 text-white",
+        "bg-gradient-to-r from-purple-500/20 to-pink-500/20 border-pink-400/50 hover:border-pink-400 text-white",
+        "bg-gradient-to-r from-amber-500/20 to-orange-500/20 border-orange-400/50 hover:border-orange-400 text-white",
+        "bg-gradient-to-r from-emerald-500/20 to-teal-500/20 border-teal-400/50 hover:border-teal-400 text-white"
+      ];
+      const badgeColors = [
+        "bg-cyan-500 shadow-[0_0_10px_rgba(6,182,212,0.6)]",
+        "bg-pink-500 shadow-[0_0_10px_rgba(236,72,153,0.6)]",
+        "bg-orange-500 shadow-[0_0_10px_rgba(249,115,22,0.6)]",
+        "bg-teal-500 shadow-[0_0_10px_rgba(20,184,166,0.6)]"
+      ];
+      const optionLetters = ['A', 'B', 'C', 'D'];
+
+      // --- SUB-HALAMAN: KUIS EKONOMI (Pilihan 1) ---
+      const HalamanKuisEkonomi = () => {
+        return (
+          <div className="w-full h-full relative z-10 overflow-hidden rounded-2xl shadow-2xl border border-white/20 bg-black/50">
+            <iframe
+              src="https://indrawulan75-bit.github.io/gamesangmenteri/"
+              className="absolute top-0 left-0 w-full h-full border-0"
+              title="Game Sang Menteri: Misi Penyelamatan Kas Negara"
+              allowFullScreen
+              allow="autoplay; fullscreen"
+            ></iframe>
+          </div>
+        );
+      };
+
+      // --- SUB-HALAMAN: KUIS GAME (GAME IFRAME DETEKTIF RUPIAH - Pilihan 2) ---
+      const HalamanKuisGame = () => {
+        return (
+          <div className="w-full h-full relative z-10 overflow-hidden rounded-2xl shadow-2xl border border-white/20 bg-black/50">
+            <iframe
+              src="https://indrawulan75-bit.github.io/detektifidr/"
+              className="absolute top-0 left-0 w-full h-full border-0"
+              title="Game Kuis Detektif Rupiah"
+              allowFullScreen
+              allow="autoplay; fullscreen"
+            ></iframe>
+          </div>
+        );
+      };
+
+      // --- SUB-HALAMAN: PETUNJUK ASESMEN ---
+      const HalamanPetunjukAsesmen = () => {
+        return (
+          <React.Fragment>
+            <div
+              className="fixed inset-0 z-[-1] bg-cover bg-center bg-no-repeat"
+              style={{ backgroundImage: 'url("https://i.imgur.com/uCphnOJ.png")' }}
+            >
+              <div className="absolute inset-0 bg-[#0f172a]/20"></div>
+            </div>
+            <div className="flex flex-col items-center justify-between h-full max-w-3xl mx-auto px-4 py-10 relative z-10">
+              {/* Area kosong untuk menghilangkan konten teks dan menonjolkan gambar latar */}
+              <div className="flex-grow flex items-center justify-center"></div>
+             
+              <div className="flex w-full justify-between pt-4">
+                <Button onClick={() => navigate('menu')} icon={ArrowLeft} variant="secondary">
+                  Kembali
+                </Button>
+                <Button onClick={() => navigate('asesmen')} icon={Play} variant="primary" className="flex-row-reverse bg-gradient-to-r from-rose-500 to-red-600 hover:shadow-rose-500/50">
+                  Mulai
+                </Button>
+              </div>
+            </div>
+          </React.Fragment>
+        );
+      };
+
+      // --- SUB-HALAMAN: ASESMEN ---
+      const HalamanAsesmen = () => {
+        const pertanyaan = [
+          {
+            tanya: "Mengapa kondisi ekonomi Indonesia pada awal kemerdekaan sangat kacau dan mengalami hiperinflasi?",
+            opsi: ["Kas negara kosong dan blokade ekonomi Belanda", "Terlalu banyak bantuan asing yang masuk", "Pembangunan infrastruktur besar-besaran", "Ekspor pertanian yang berlebihan ke Eropa"],
+            jawaban: 0
+          },
+          {
+            tanya: "Salah satu penyebab inflasi tinggi di awal kemerdekaan adalah beredarnya tiga mata uang secara bersamaan, yaitu...",
+            opsi: ["Uang NICA, ORI, dan Rupiah", "Uang De Javasche Bank, uang Hindia Belanda, dan uang Jepang", "Uang Dollar, Yen, dan Gulden", "Uang ORI, ORIDA, dan Rupiah"],
+            jawaban: 1
+          },
+          {
+            tanya: "Usaha pemerintah RI menembus blokade ekonomi Belanda di kancah internasional salah satunya dengan mengadakan diplomasi beras ke negara...",
+            opsi: ["Amerika Serikat", "Australia", "India", "Jepang"],
+            jawaban: 2
+          },
+          {
+            tanya: "Kapan pemerintah Republik Indonesia secara resmi mulai memberlakukan Oeang Republik Indonesia (ORI)?",
+            opsi: ["17 Agustus 1945", "30 Oktober 1946", "1 Januari 1947", "27 Desember 1949"],
+            jawaban: 1
+          },
+          {
+            tanya: "Guna mengisi kas negara yang kosong, pada tahun 1946 pemerintah memprakarsai penyelenggaraan Pinjaman Nasional yang diusulkan oleh Menteri Keuangan...",
+            opsi: ["A.A. Maramis", "Syafruddin Prawiranegara", "Ir. Surachman", "Sumitro Djojohadikusumo"],
+            jawaban: 2
+          },
+          {
+            tanya: "Apa nama rencana produksi lima tahun (1948-1950) yang dicetuskan oleh Menteri Persediaan Makanan Rakyat untuk berswasembada pangan?",
+            opsi: ["Kasimo Plan", "Program Benteng", "Sistem Ali-Baba", "Gerakan Asaat"],
+            jawaban: 0
+          },
+          {
+            tanya: "Lembaga perbankan yang didirikan pemerintah pada 5 Juli 1946 untuk mengatur nilai tukar ORI dan sirkulasi peredaran uang adalah...",
+            opsi: ["Bank Rakyat Indonesia (BRI)", "Bank Negara Indonesia (BNI)", "Bank Tabungan Negara (BTN)", "Bank Indonesia (BI)"],
+            jawaban: 1
+          },
+          {
+            tanya: "Badan Perancang Ekonomi (Planning Board) dibentuk atas inisiatif Menteri Kemakmuran pada tahun 1947, yaitu...",
+            opsi: ["Moh. Hatta", "A.K. Gani", "Sutan Sjahrir", "Iskaq Tjokrohadisurjo"],
+            jawaban: 1
+          },
+          {
+            tanya: "Dalam menghadapi blokade Belanda, pemerintah sempat merencanakan sistem autarki. Apa yang dimaksud dengan sistem tersebut?",
+            opsi: ["Sistem ekonomi yang sepenuhnya bergantung pada impor", "Sistem ekonomi pasar bebas tanpa campur tangan negara", "Sistem ekonomi yang harus mampu memenuhi kebutuhan sendiri dari tiap daerahnya", "Sistem monopoli perdagangan rempah-rempah oleh negara"],
+            jawaban: 2
+          },
+          {
+            tanya: "Tujuan utama Belanda (NICA) melakukan blokade ekonomi terhadap Republik Indonesia sejak November 1945 adalah...",
+            opsi: ["Mencegah masuknya senjata militer serta menghancurkan ekonomi RI", "Melindungi kekayaan alam Indonesia dari eksploitasi negara fasis", "Meningkatkan kerja sama ekonomi dengan pihak sekutu", "Memaksa Indonesia menggunakan mata uang NICA sebagai standar utama"],
+            jawaban: 0
+          }
+        ];
+
+        const [soalSekarang, setSoalSekarang] = useState(0);
+        const [skor, setSkor] = useState(0);
+        const [selesai, setSelesai] = useState(false);
+        const [jawabanDipilih, setJawabanDipilih] = useState(null);
+
+        const handleJawab = (index) => {
+          setJawabanDipilih(index);
+         
+          const isBenar = index === pertanyaan[soalSekarang].jawaban;
+          if (isBenar) setSkor(skor + 100 / pertanyaan.length);
+
+          setTimeout(() => {
+            if (soalSekarang < pertanyaan.length - 1) {
+              setSoalSekarang(soalSekarang + 1);
+              setJawabanDipilih(null);
+            } else {
+              setSelesai(true);
+            }
+          }, 1000);
+        };
+
+        const resetKuis = () => {
+          setSoalSekarang(0);
+          setSkor(0);
+          setSelesai(false);
+          setJawabanDipilih(null);
+        };
+
+        if (selesai) {
+          return (
+            <React.Fragment>
+              <div
+                className="fixed inset-0 z-[-1] bg-cover bg-center bg-no-repeat"
+                style={{ backgroundImage: 'url("https://i.imgur.com/h5jsQOH.png")' }}
+              >
+                <div className="absolute inset-0 bg-[#0f172a]/20"></div>
+              </div>
+              <div className="flex flex-col items-center justify-center h-full w-full max-w-2xl ml-auto mr-4 md:mr-12 lg:mr-24 px-4 text-center relative z-10">
+                <div className="bg-white/10 backdrop-blur-lg border border-white/20 p-10 rounded-3xl shadow-2xl w-full">
+                  <Target size={64} className="text-yellow-400 mx-auto mb-4" />
+                  <h2 className="text-4xl font-bold text-white mb-2">Asesmen Selesai!</h2>
+                  <p className="text-xl text-indigo-100 mb-8">Anda telah menyelesaikan sesi asesmen.</p>
+                 
+                  <div className="bg-black/30 p-8 rounded-2xl mb-8">
+                    <p className="text-2xl text-white mb-2">Skor Akhir Anda:</p>
+                    <p className={`text-7xl font-extrabold ${skor >= 70 ? 'text-green-400' : 'text-red-400'}`}>
+                      {Math.round(skor)}
+                    </p>
+                    <p className="text-indigo-200 mt-4">
+                      {skor >= 70 ? 'Luar Biasa! Pemahaman Anda sangat baik.' : 'Tetap semangat! Pelajari materinya lagi ya.'}
+                    </p>
+                  </div>
+
+                  <div className="flex gap-4 justify-center">
+                    <Button onClick={resetKuis} icon={RotateCcw} variant="primary">Ulangi Asesmen</Button>
+                    <Button onClick={() => navigate('menu')} icon={Home} variant="secondary">Kembali ke Menu</Button>
+                  </div>
+                </div>
+              </div>
+            </React.Fragment>
+          );
+        }
+
+        return (
+          <React.Fragment>
+            <div
+              className="fixed inset-0 z-[-1] bg-cover bg-center bg-no-repeat"
+              style={{ backgroundImage: 'url("https://i.imgur.com/h5jsQOH.png")' }}
+            >
+              <div className="absolute inset-0 bg-[#0f172a]/20"></div>
+            </div>
+            <div className="flex flex-col w-full max-w-3xl ml-auto mr-4 md:mr-12 lg:mr-24 h-full p-4 justify-center relative z-10">
+              <div className="bg-white/10 backdrop-blur-lg border border-white/20 p-8 rounded-3xl shadow-2xl">
+                <div className="flex justify-between items-center mb-6 border-b border-white/20 pb-4">
+                  <div className="flex items-center gap-3">
+                    <ListOrdered size={32} className="text-rose-400" />
+                    <h2 className="text-2xl font-bold text-white">Asesmen Pembelajaran</h2>
+                  </div>
+                  <div className="bg-indigo-900/50 px-4 py-2 rounded-full text-indigo-100 font-bold">
+                    Pertanyaan {soalSekarang + 1} dari {pertanyaan.length}
+                  </div>
+                </div>
+
+                <div className="my-8">
+                  <h3 className="text-2xl text-white font-medium mb-6 leading-relaxed">
+                    {pertanyaan[soalSekarang].tanya}
+                  </h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {pertanyaan[soalSekarang].opsi.map((opsi, idx) => {
+                      let btnStyle = optionColors[idx % 4];
+                      let badgeStyle = badgeColors[idx % 4];
+                      let Icon = null;
+
+                      if (jawabanDipilih !== null) {
+                        if (idx === pertanyaan[soalSekarang].jawaban) {
+                          btnStyle = "bg-gradient-to-r from-green-500/80 to-emerald-600/80 border-green-400 text-white shadow-[0_0_15px_rgba(74,222,128,0.5)]";
+                          badgeStyle = "bg-green-500";
+                          Icon = CheckCircle;
+                        } else if (idx === jawabanDipilih) {
+                          btnStyle = "bg-gradient-to-r from-red-500/80 to-rose-600/80 border-red-400 text-white shadow-[0_0_15px_rgba(248,113,113,0.5)]";
+                          badgeStyle = "bg-red-500";
+                          Icon = XCircle;
+                        } else {
+                          btnStyle = "bg-white/5 opacity-40 border-white/10 text-white grayscale";
+                          badgeStyle = "bg-gray-600 shadow-none";
+                        }
+                      }
+
+                      return (
+                        <button
+                          key={idx}
+                          disabled={jawabanDipilih !== null}
+                          onClick={() => handleJawab(idx)}
+                          className={`p-4 rounded-xl text-left font-medium transition-all duration-300 flex items-center gap-4 shadow-md border ${btnStyle} transform ${jawabanDipilih === null ? 'hover:-translate-y-1 hover:shadow-xl' : ''}`}
+                        >
+                          <div className={`flex-shrink-0 w-10 h-10 flex items-center justify-center rounded-full font-bold text-lg text-white transition-colors duration-300 ${badgeStyle}`}>
+                            {optionLetters[idx]}
+                          </div>
+                          <span className="flex-grow">{opsi}</span>
+                          {Icon && <Icon size={24} className="flex-shrink-0" />}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              </div>
+              <div className="mt-8">
+                <Button onClick={() => navigate('menu')} icon={Home} variant="secondary">
+                  Batal & Kembali ke Menu
+                </Button>
+              </div>
+            </div>
+          </React.Fragment>
+        );
+      };
+
+      // --- SUB-HALAMAN: REFERENSI ---
+      const HalamanReferensi = () => (
+        <React.Fragment>
+          <div
+            className="fixed inset-0 z-[-1] bg-cover bg-center bg-no-repeat"
+            style={{ backgroundImage: 'url("https://i.imgur.com/vBr3bIT.png")' }}
+          >
+            <div className="absolute inset-0 bg-[#0f172a]/20"></div>
+          </div>
+          <div className="flex flex-col w-full max-w-md mr-auto ml-4 md:ml-8 lg:ml-12 h-full p-4 justify-center relative z-10">
+            <div className="bg-[#0f172a]/70 backdrop-blur-md border border-white/10 p-6 rounded-3xl shadow-[0_0_30px_rgba(0,0,0,0.5)]">
+              <div className="flex items-center gap-3 mb-6 border-b border-white/20 pb-4">
+                <Bookmark size={32} className="text-violet-400 drop-shadow-md" />
+                <h2 className="text-2xl font-bold text-white drop-shadow-lg">Referensi</h2>
+              </div>
+              <div className="space-y-4 text-base text-white">
+                <p className="font-medium drop-shadow text-sm md:text-base">Berikut adalah daftar pustaka dan sumber referensi yang digunakan dalam materi pembelajaran ini:</p>
+                <ul className="list-disc list-inside space-y-3 bg-black/40 border border-white/5 p-5 rounded-xl shadow-inner text-sm">
+                  <li className="leading-relaxed drop-shadow-sm">Buku Sejarah Ekonomi Indonesia.</li>
+                  <li className="leading-relaxed drop-shadow-sm">Jurnal Kebijakan Fiskal dan Moneter Awal Kemerdekaan RI.</li>
+                  <li className="leading-relaxed drop-shadow-sm">Arsip Nasional Republik Indonesia (ANRI).</li>
+                  <li className="leading-relaxed drop-shadow-sm">Situs Resmi Bank Indonesia (BI).</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </React.Fragment>
+      );
+
+      // --- SUB-HALAMAN: PROFIL PENGEMBANG ---
+      const HalamanProfil = () => (
+        <React.Fragment>
+          <div
+            className="fixed inset-0 z-[-1] bg-cover bg-center bg-no-repeat"
+            style={{ backgroundImage: 'url("https://i.imgur.com/7P3ddCj.png")' }}
+          >
+            <div className="absolute inset-0 bg-[#0f172a]/20"></div>
+          </div>
+          <div className="flex flex-col items-center justify-between h-full max-w-3xl mx-auto px-4 py-10 relative z-10">
+            {/* Area konten dikosongkan sesuai permintaan */}
+            <div className="flex-grow flex items-center justify-center"></div>
+          </div>
+        </React.Fragment>
+      );
+
+      // Fungsi Render Utama
+      const renderPage = () => {
+        switch (currentPage) {
+          case 'judul': return <HalamanJudul />;
+          case 'penjelasan': return <HalamanPenjelasan />;
+          case 'detektif': return <HalamanDetektif />;
+          case 'petunjuk': return <HalamanPetunjuk />;
+          case 'login': return <HalamanLogin namaPeserta={namaPeserta} setNamaPeserta={setNamaPeserta} asalSekolah={asalSekolah} setAsalSekolah={setAsalSekolah} navigate={navigate} />;
+          case 'pengantar': return <HalamanPengantar />; // Menambahkan render Halaman Pengantar
+          case 'menu': return <HalamanMenu />;
+          case 'tujuan': return <HalamanTujuan />;
+          case 'materi': return <HalamanSubMenuMateri />; // Mengarah ke Rincian Materi
+          case 'isi-materi-1': return <HalamanMateriDrive1 />; // Membuka Google Drive embed
+          case 'isi-materi-2': return <HalamanMateriDrive2 />; // Membuka Google Drive embed kedua
+          case 'kuis': return <HalamanSubMenuKuis />; // Membuka sub-menu kuis
+          case 'kuis-ekonomi': return <HalamanKuisEkonomi />; // Menjalankan Kuis Ekonomi Biasa
+          case 'kuis-game': return <HalamanKuisGame />; // Menjalankan Game Iframe
+          case 'petunjuk-asesmen': return <HalamanPetunjukAsesmen />; // Halaman instruksi asesmen
+          case 'asesmen': return <HalamanAsesmen />; // Mengarah ke halaman Asesmen yang sebenarnya
+          case 'referensi': return <HalamanReferensi />; // Mengarah ke halaman Referensi
+          case 'profil': return <HalamanProfil />;
+          default: return <HalamanJudul />;
+        }
+      };
+
+      return (
+        <div className="min-h-screen w-full bg-[#0f172a] text-slate-100 font-sans overflow-x-hidden selection:bg-pink-500 selection:text-white">
+         
+          {/* Elemen Pemutar Audio Latar Tersembunyi */}
+          <audio
+            ref={audioRef}
+            src="https://github.com/indrawulan75-bit/musikMPIpetualangan/raw/refs/heads/main/nastelbom-adventure-471461.mp3"
+            loop
+          />
+
+          <div className="fixed inset-0 z-0 overflow-hidden pointer-events-none">
+            <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] rounded-full bg-blue-600/20 blur-[120px]"></div>
+            <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] rounded-full bg-purple-600/20 blur-[120px]"></div>
+            <div className="absolute top-[40%] left-[60%] w-[30%] h-[30%] rounded-full bg-pink-600/10 blur-[100px]"></div>
+          </div>
+
+          <div className={`relative z-10 w-full min-h-screen transition-opacity duration-300 ease-in-out ${fade} pb-8`}>
+           
+            {/* Header dibuat lebih transparan (opacity diturunkan) di halaman selain judul */}
+            <header className={`py-2 px-4 sticky top-0 z-50 transition-all duration-300 ${currentPage === 'judul' ? 'bg-transparent' : 'bg-[#0f172a]/10 border-b border-white/5 backdrop-blur-sm'}`}>
+              <div className={`max-w-6xl mx-auto flex items-center ${currentPage === 'judul' ? 'justify-end' : 'justify-between'}`}>
+               
+                {/* Kiri: Judul M-Learning HANYA tampil jika bukan di Halaman Judul */}
+                {currentPage !== 'judul' && (
+                  <div className="flex items-center gap-2 text-white/80">
+                    <BookOpen size={18} className="text-blue-400"/>
+                    <span className="font-bold tracking-wider uppercase text-xs md:text-sm">M-LEARNING PERISAI</span>
+                  </div>
+                )}
+               
+                {/* Kanan: Navigasi dan Kontrol Musik/Fullscreen */}
+                <div className="flex items-center gap-3 sm:gap-4">
+                  {currentPage !== 'menu' && currentPage !== 'penjelasan' && currentPage !== 'detektif' && currentPage !== 'petunjuk' && currentPage !== 'login' && currentPage !== 'pengantar' && currentPage !== 'judul' && (
+                    <button
+                      onClick={() => navigate('menu')}
+                      className="bg-black/40 p-1.5 rounded-full text-white hover:bg-black/60 transition-all hover:scale-110 active:scale-95"
+                      title="Ke Menu"
+                    >
+                      <Home size={18} className="text-indigo-300" />
+                    </button>
+                  )}
+                 
+                  {/* Grup Tombol Kontrol */}
+                  <div className="flex gap-2 items-center">
+                    <button
+                      onClick={toggleMusic}
+                      className="bg-black/40 p-1.5 rounded-full text-white hover:bg-black/60 transition-all hover:scale-110 active:scale-95"
+                      title={isMusicPlaying ? "Matikan Musik" : "Nyalakan Musik"}
+                    >
+                      {isMusicPlaying ? <Volume2 size={18} className="text-blue-400" /> : <VolumeX size={18} className="text-gray-400" />}
+                    </button>
+                   
+                    <button
+                      onClick={toggleFullscreen}
+                      className="bg-black/40 p-1.5 rounded-full text-white hover:bg-black/60 transition-all hover:scale-110 active:scale-95"
+                      title={isFullscreen ? "Keluar Layar Penuh" : "Layar Penuh"}
+                    >
+                      {isFullscreen ? <Minimize size={18} className="text-emerald-300" /> : <Maximize size={18} className="text-indigo-300" />}
+                    </button>
+                  </div>
+                </div>
+
+              </div>
+            </header>
+
+            <main className="max-w-6xl mx-auto h-[calc(100vh-60px)] pt-4">
+              {renderPage()}
+            </main>
+          </div>
+        </div>
+      );
+    }
+
+    // Melakukan render aplikasi React ke dalam div #root di HTML
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(<App />);
+  </script>
+</body>
+</html>
